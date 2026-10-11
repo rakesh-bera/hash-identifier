@@ -8,7 +8,7 @@ When you find a hash in a leaked database or a config file, the first question i
 
 ## Features
 
-- Identifies 12 hash formats (MD5, NTLM, SHA family, bcrypt, Argon2, Linux crypt formats)
+- Identifies 13 hash formats (MD5, NTLM, SHA family, CRC32, bcrypt, Argon2, Linux crypt formats)
 - Ranks matches by confidence (high, medium, low)
 - Adds a security note to each match (broken, weak, fast-hash, strong)
 - Accepts several hashes at once, or a whole file
