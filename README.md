@@ -71,6 +71,11 @@ This tool identifies by shape only. Several algorithms produce hashes with the s
 - Building a command-line interface with `argparse`
 - Handling errors cleanly and producing JSON output
 
+## Roadmap
+
+- Add more hash formats (MySQL, Django, WordPress)
+- Add a `--verbose` option that explains why each guess matched
+
 ## Credit
 
 This project was inspired by the Hash Identifier in [CarterPerez-dev/Cybersecurity-Projects](https://github.com/CarterPerez-dev/Cybersecurity-Projects). I used it to understand the problem, then wrote my own code from scratch with added confidence ranking, security notes, file input, and JSON output.
