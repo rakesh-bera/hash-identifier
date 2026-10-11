@@ -23,6 +23,8 @@ HASH_RULES = [
      "security": "fast-hash", "note": "Part of the SHA-2 family."},
     {"name": "SHA-512", "length": 128, "hex": True, "confidence": "medium",
      "security": "fast-hash", "note": "Strong hash, but too fast for passwords."},
+    {"name": "CRC32", "length": 8, "hex": True, "confidence": "low",
+     "security": "not-cryptographic", "note": "Checksum for catching errors, not a security hash."},
     {"name": "bcrypt", "prefixes": ("$2a$", "$2b$", "$2y$"), "length": 60,
      "confidence": "high", "security": "strong",
      "note": "Slow by design, good for passwords."},
@@ -35,6 +37,7 @@ HASH_RULES = [
      "security": "acceptable", "note": "Linux password format."},
     {"name": "SHA-512-crypt", "prefixes": ("$6$",), "confidence": "high",
      "security": "acceptable", "note": "Common Linux password format."},
+    
 ]
 
 # Lower number = shown first.
