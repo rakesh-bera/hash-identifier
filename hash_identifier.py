@@ -5,18 +5,40 @@ import json
 import string
 import sys
 
-# Each rule describes the "shape" of one hash type.
+# Each rule describes the "shape" of one hash type, plus what an analyst should know.
+# confidence: how sure we are when the shape matches (high / medium / low)
+# security:   is this algorithm acceptable for storing passwords today?
 HASH_RULES = [
-    {"name": "MD5", "length": 32, "hex": True},
-    {"name": "NTLM", "length": 32, "hex": True},
-    {"name": "SHA-1", "length": 40, "hex": True},
-    {"name": "SHA-224", "length": 56, "hex": True},
-    {"name": "SHA-256", "length": 64, "hex": True},
-    {"name": "SHA-384", "length": 96, "hex": True},
-    {"name": "SHA-512", "length": 128, "hex": True},
-    {"name": "bcrypt", "prefixes": ("$2a$", "$2b$", "$2y$"), "length": 60},
-    {"name": "Argon2", "prefixes": ("$argon2i$", "$argon2d$", "$argon2id$")},
+    {"name": "MD5", "length": 32, "hex": True, "confidence": "medium",
+     "security": "broken", "note": "Very common, fast, and easy to crack."},
+    {"name": "NTLM", "length": 32, "hex": True, "confidence": "low",
+     "security": "weak", "note": "Windows password hash. Same shape as MD5."},
+    {"name": "SHA-1", "length": 40, "hex": True, "confidence": "medium",
+     "security": "broken", "note": "Old standard, collisions have been found."},
+    {"name": "SHA-224", "length": 56, "hex": True, "confidence": "medium",
+     "security": "fast-hash", "note": "Part of the SHA-2 family."},
+    {"name": "SHA-256", "length": 64, "hex": True, "confidence": "medium",
+     "security": "fast-hash", "note": "Strong hash, but too fast for passwords."},
+    {"name": "SHA-384", "length": 96, "hex": True, "confidence": "medium",
+     "security": "fast-hash", "note": "Part of the SHA-2 family."},
+    {"name": "SHA-512", "length": 128, "hex": True, "confidence": "medium",
+     "security": "fast-hash", "note": "Strong hash, but too fast for passwords."},
+    {"name": "bcrypt", "prefixes": ("$2a$", "$2b$", "$2y$"), "length": 60,
+     "confidence": "high", "security": "strong",
+     "note": "Slow by design, good for passwords."},
+    {"name": "Argon2", "prefixes": ("$argon2i$", "$argon2d$", "$argon2id$"),
+     "confidence": "high", "security": "strong",
+     "note": "Modern password hash, current best practice."},
+    {"name": "MD5-crypt", "prefixes": ("$1$",), "confidence": "high",
+     "security": "weak", "note": "Old Linux password format."},
+    {"name": "SHA-256-crypt", "prefixes": ("$5$",), "confidence": "high",
+     "security": "acceptable", "note": "Linux password format."},
+    {"name": "SHA-512-crypt", "prefixes": ("$6$",), "confidence": "high",
+     "security": "acceptable", "note": "Common Linux password format."},
 ]
+
+# Lower number = shown first.
+CONFIDENCE_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 
 def is_hex(text):
@@ -35,14 +57,24 @@ def rule_matches(text, rule):
     return True
 
 
+def sort_key(match):
+    """Return the number used to sort matches (most confident first)."""
+    return CONFIDENCE_ORDER[match["confidence"]]
+
+
 def identify(hash_string):
-    """Return a list of hash types that the given string could be."""
+    """Return the hash types the string could be, most likely first."""
     hash_string = hash_string.strip()
     matches = []
     for rule in HASH_RULES:
         if rule_matches(hash_string, rule):
-            matches.append(rule["name"])
-    return matches
+            matches.append({
+                "name": rule["name"],
+                "confidence": rule["confidence"],
+                "security": rule["security"],
+                "note": rule["note"],
+            })
+    return sorted(matches, key=sort_key)
 
 
 def read_hashes_from_file(path):
@@ -67,11 +99,12 @@ def print_text(results):
     """Print results in a human-friendly layout."""
     for item in results:
         print(item["hash"])
-        if item["matches"]:
-            for name in item["matches"]:
-                print(f"  - {name}")
-        else:
+        if not item["matches"]:
             print("  - Unknown hash type")
+            continue
+        for match in item["matches"]:
+            print(f"  - {match['name']}  [{match['confidence']} confidence]")
+            print(f"      Security: {match['security']}. {match['note']}")
 
 
 def main():
